@@ -1,0 +1,192 @@
+{
+  "nbformat": 4,
+  "nbformat_minor": 0,
+  "metadata": {
+    "colab": {
+      "name": "autograd.ipynb",
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "name": "python3",
+      "display_name": "Python 3"
+    }
+  },
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/VJatla/tryout/blob/master/pytorch/autograd-using-colab/fahrenheit-to-celsius.ipynb%20\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "kdHu_9X2ET97",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "# -*- coding: utf-8 -*-\n",
+        "\"\"\"\n",
+        "This script demonstrates usage of automatic differentiation provided by pytorch.\n",
+        "This this example we will learn parameters for converting Centigrade to \n",
+        "Fahrenheit.\n",
+        "    f = theta0 + theta1*c, where,\n",
+        "        theta0 = 32\n",
+        "        theta1 = 1.8\n",
+        "\n",
+        "Original YouTube Link: https://www.youtube.com/watch?v=W7Auj1gcdQ0\n",
+        "\"\"\"\n",
+        "import torch"
+      ],
+      "execution_count": 106,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "MiN73SH-EYhX",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "def get_loss(f_predict, f_true):\n",
+        "  \"\"\"\n",
+        "  Returns squared loss value between ground truth (f_true) and\n",
+        "  predicted (f_predict).\n",
+        "  \"\"\"\n",
+        "  return torch.sum((f_predict - f_true)**2)"
+      ],
+      "execution_count": 107,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "iliMh5l_Eaw1",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "def get_prediction(theta0, theta1):\n",
+        "  \"\"\"\n",
+        "  Predicts fahrenheit (f_predict) using values of theta0 and theta1\n",
+        "  \"\"\"\n",
+        "  return theta0 + theta1*c"
+      ],
+      "execution_count": 108,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "XWnD31nqEeN8",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "def update_parameters(loss, theta0, theta1):\n",
+        "  \"\"\"\n",
+        "  Updates theta0 and theta1 using the following rule,\n",
+        "      theta0 := theta0 - 0.01*grad_loss_wrt_theta0\n",
+        "      theta1 := theta1 - 0.01*grad_loss_wrt_theta1\n",
+        "  \"\"\"\n",
+        "  # ***IMPORTANT*** #\n",
+        "  # Calculates gradient of theta0 and theta1 with respect to loss\n",
+        "  loss.backward()\n",
+        "  \n",
+        "  with torch.no_grad():\n",
+        "    theta0 -= 0.01*theta0.grad\n",
+        "    theta1 -= 0.01*theta1.grad\n",
+        "\n",
+        "  return theta0, theta1"
+      ],
+      "execution_count": 109,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "02lQq2GCEgL_",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "# Generating random centigrade samples\n",
+        "c      = torch.rand(10)\n",
+        "\n",
+        "# Generating fahrenheit values (ground truth) using formula\n",
+        "f_true = 1.8*c + 32\n",
+        "\n",
+        "# Initializing theta0 and theta1 to ones\n",
+        "theta0 = torch.ones(1, requires_grad=True)\n",
+        "theta1 = torch.ones(1, requires_grad=True)"
+      ],
+      "execution_count": 110,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "StsWM4iTElUf",
+        "colab_type": "code",
+        "colab": {}
+      },
+      "source": [
+        "# Keep updating theta0 and theta1 until loss (squre error) is less thatn 0.01\n",
+        "losses    = []\n",
+        "f_predict = get_prediction(theta0, theta1)\n",
+        "loss      = get_loss(f_predict, f_true)\n",
+        "while loss.item() > 0.01:\n",
+        "\n",
+        "  # Updating theta0 and theta1\n",
+        "  theta0, theta1 = update_parameters(loss, theta0, theta1)\n",
+        "\n",
+        "  # Making gradient for new theta0 and theta1 zeros\n",
+        "  theta0.grad.zero_()\n",
+        "  theta1.grad.zero_()\n",
+        "\n",
+        "  # Predicting and calculating losss\n",
+        "  f_predict      = get_prediction(theta0, theta1)\n",
+        "  loss           = get_loss(f_predict, f_true)\n",
+        "  losses         = losses + [loss.item()] "
+      ],
+      "execution_count": 111,
+      "outputs": []
+    },
+    {
+      "cell_type": "code",
+      "metadata": {
+        "id": "jGCzH15aEoU6",
+        "colab_type": "code",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 69
+        },
+        "outputId": "deb97c2d-21dd-445f-acb7-07b5d2b17e86"
+      },
+      "source": [
+        "f2c_formula_true = \"True:   F = \" + \"32.00\" + \" + \" + \"1.80\" + \"xC\"\n",
+        "f2c_formula      = \"Learnt: F = \" + str(round(theta0.item(),2)) + \" + \" + str(round(theta1.item(),2)) + \"xC\"\n",
+        "print(\"Fahrenheit to Centigrade\\n\\t\",f2c_formula_true,\"\\n\\t\",f2c_formula)"
+      ],
+      "execution_count": 119,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "text": [
+            "Fahrenheit to Centigrade\n",
+            "\t True:   F = 32.00 + 1.80xC \n",
+            "\t Learnt: F = 31.93 + 1.91xC\n"
+          ],
+          "name": "stdout"
+        }
+      ]
+    }
+  ]
+}
